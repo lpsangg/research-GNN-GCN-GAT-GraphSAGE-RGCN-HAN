@@ -11,7 +11,7 @@ from pathlib import Path
 # Add parent directory to path
 sys.path.append(str(Path(__file__).parent.parent))
 
-from RGCN_HAN.rgcn_model import create_rgcn_model, prepare_rgcn_data
+from RGCN.model import create_rgcn_model, prepare_rgcn_data
 from utils import (
     load_ieee_fraud_data,
     preprocess_features,

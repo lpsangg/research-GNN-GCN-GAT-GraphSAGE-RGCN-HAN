@@ -17,7 +17,7 @@ from GNN.train import train_gnn
 from GCN.train import train_gcn
 from GAT.train import train_gat
 from GraphSAGE.train import train_graphsage
-from RGCN_HAN.train_rgcn import train_rgcn
+from RGCN.train import train_rgcn
 from HAN.train import train_han
 
 # Import utilities

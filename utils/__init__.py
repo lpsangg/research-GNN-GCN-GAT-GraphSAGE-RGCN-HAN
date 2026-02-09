@@ -2,7 +2,7 @@
 Utilities package for GNN Fraud Detection Research
 """
 
-from .Graph_Construction import (
+from .graph_construction import (
     create_user_id_refined,
     prepare_homogeneous_data,
     prepare_hetero_data,
