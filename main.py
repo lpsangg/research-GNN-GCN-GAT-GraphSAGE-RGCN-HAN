@@ -447,7 +447,7 @@ def main():
         
         # For quick testing, set max_samples to small number (e.g., 5000)
         # For full training, set to None
-        'max_samples': None,  # Change to 5000 for quick testing
+        'max_samples': 10000,  # Change to 5000 for quick testing, None for full training
     }
     
     print("\n" + "="*70)
