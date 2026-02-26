@@ -15,7 +15,8 @@ from .data_loader import (
     load_ieee_fraud_data,
     preprocess_features,
     get_feature_statistics,
-    balance_dataset
+    balance_dataset,
+    PreprocessingPipeline
 )
 
 from .metrics import (
@@ -62,6 +63,7 @@ __all__ = [
     'preprocess_features',
     'get_feature_statistics',
     'balance_dataset',
+    'PreprocessingPipeline',
     
     # Metrics
     'compute_metrics',

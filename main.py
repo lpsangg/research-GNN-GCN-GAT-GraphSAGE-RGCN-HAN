@@ -2,6 +2,8 @@
 Main Script để chạy và so sánh tất cả 6 GNN models cho Fraud Detection
 """
 
+import os
+import sys
 import torch
 import pandas as pd
 import numpy as np
@@ -12,13 +14,14 @@ from datetime import datetime
 import matplotlib.pyplot as plt
 import seaborn as sns
 
-# Import training functions
-from GNN.train import train_gnn
-from GCN.train import train_gcn
-from GAT.train import train_gat
-from GraphSAGE.train import train_graphsage
-from RGCN.train import train_rgcn
-from HAN.train import train_han
+# Get the directory where this script is located
+SCRIPT_DIR = Path(__file__).resolve().parent
+os.chdir(SCRIPT_DIR)  # Change to script directory
+sys.path.insert(0, str(SCRIPT_DIR))  # Add to Python path
+
+# Import model registry and runner
+from models_config import MODEL_CONFIGS, list_available_models
+from runner import run_all_models, run_homogeneous_models, run_heterogeneous_models, run_selected_models
 
 # Import utilities
 from utils import (
@@ -27,294 +30,8 @@ from utils import (
 )
 
 
-def create_experiment_config(base_config, model_specific=None):
-    """
-    Tạo config cho mỗi model với base config và model-specific settings.
-    
-    Args:
-        base_config: Dict chứa common settings
-        model_specific: Dict chứa model-specific settings
-    
-    Returns:
-        config: Complete config dictionary
-    """
-    config = base_config.copy()
-    if model_specific:
-        config.update(model_specific)
-    return config
-
-
-def run_all_models(base_config):
-    """
-    Chạy tất cả 6 models và thu thập results.
-    
-    Args:
-        base_config: Dictionary chứa common configuration
-    
-    Returns:
-        results: Dictionary chứa results của tất cả models
-    """
-    results = {}
-    
-    print("\n" + "="*70)
-    print("STARTING COMPREHENSIVE GNN RESEARCH FOR FRAUD DETECTION")
-    print("="*70)
-    print(f"Start time: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
-    print(f"Device: {'CUDA' if torch.cuda.is_available() else 'CPU'}")
-    print(f"Max samples: {base_config.get('max_samples', 'All')}")
-    print("="*70)
-    
-    # ============================================================
-    # 1. GNN (Basic Graph Neural Network)
-    # ============================================================
-    print("\n" + "="*70)
-    print("MODEL 1/6: GNN (Basic Graph Neural Network)")
-    print("="*70)
-    
-    try:
-        start_time = time.time()
-        
-        gnn_config = create_experiment_config(base_config, {
-            'checkpoint_dir': 'checkpoints/GNN',
-            'model_type': 'improved',  # 'basic' or 'improved'
-            'hidden_channels': 64,
-            'num_layers': 2,
-            'dropout': 0.5,
-            'lr': 0.001,
-            'epochs': 200,
-            'patience': 20,
-        })
-        
-        model, test_metrics, tracker = train_gnn(gnn_config)
-        
-        training_time = time.time() - start_time
-        
-        results['GNN'] = {
-            'model': 'GNN',
-            'type': 'Homogeneous',
-            'metrics': test_metrics,
-            'training_time': training_time,
-            'history': tracker.get_history(),
-        }
-        
-        print(f"\n✓ GNN completed in {training_time/60:.2f} minutes")
-        print(f"  Test AUC-ROC: {test_metrics.get('auc_roc', 0):.4f}")
-        print(f"  Test F1: {test_metrics['f1']:.4f}")
-        
-    except Exception as e:
-        print(f"\n✗ GNN failed: {str(e)}")
-        results['GNN'] = {'error': str(e)}
-    
-    # ============================================================
-    # 2. GCN (Graph Convolutional Network)
-    # ============================================================
-    print("\n" + "="*70)
-    print("MODEL 2/6: GCN (Graph Convolutional Network)")
-    print("="*70)
-    
-    try:
-        start_time = time.time()
-        
-        gcn_config = create_experiment_config(base_config, {
-            'checkpoint_dir': 'checkpoints/GCN',
-            'model_type': 'jknet',  # 'standard', 'deep', or 'jknet'
-            'hidden_channels': 64,
-            'num_layers': 2,
-            'dropout': 0.5,
-            'lr': 0.01,
-            'epochs': 200,
-            'patience': 20,
-            'use_cached': True,
-        })
-        
-        model, test_metrics, tracker = train_gcn(gcn_config)
-        
-        training_time = time.time() - start_time
-        
-        results['GCN'] = {
-            'model': 'GCN',
-            'type': 'Homogeneous',
-            'metrics': test_metrics,
-            'training_time': training_time,
-            'history': tracker.get_history(),
-        }
-        
-        print(f"\n✓ GCN completed in {training_time/60:.2f} minutes")
-        print(f"  Test AUC-ROC: {test_metrics.get('auc_roc', 0):.4f}")
-        print(f"  Test F1: {test_metrics['f1']:.4f}")
-        
-    except Exception as e:
-        print(f"\n✗ GCN failed: {str(e)}")
-        results['GCN'] = {'error': str(e)}
-    
-    # ============================================================
-    # 3. GAT (Graph Attention Network)
-    # ============================================================
-    print("\n" + "="*70)
-    print("MODEL 3/6: GAT (Graph Attention Network)")
-    print("="*70)
-    
-    try:
-        start_time = time.time()
-        
-        gat_config = create_experiment_config(base_config, {
-            'checkpoint_dir': 'checkpoints/GAT',
-            'model_type': 'gatv2',  # 'standard', 'gatv2', or 'multihead'
-            'hidden_channels': 64,
-            'num_layers': 2,
-            'heads': 8,
-            'dropout': 0.6,
-            'lr': 0.005,
-            'epochs': 200,
-            'patience': 30,
-        })
-        
-        model, test_metrics, tracker = train_gat(gat_config)
-        
-        training_time = time.time() - start_time
-        
-        results['GAT'] = {
-            'model': 'GAT',
-            'type': 'Homogeneous',
-            'metrics': test_metrics,
-            'training_time': training_time,
-            'history': tracker.get_history(),
-        }
-        
-        print(f"\n✓ GAT completed in {training_time/60:.2f} minutes")
-        print(f"  Test AUC-ROC: {test_metrics.get('auc_roc', 0):.4f}")
-        print(f"  Test F1: {test_metrics['f1']:.4f}")
-        
-    except Exception as e:
-        print(f"\n✗ GAT failed: {str(e)}")
-        results['GAT'] = {'error': str(e)}
-    
-    # ============================================================
-    # 4. GraphSAGE (Sampling-based)
-    # ============================================================
-    print("\n" + "="*70)
-    print("MODEL 4/6: GraphSAGE (Sampling-based Inductive Learning)")
-    print("="*70)
-    
-    try:
-        start_time = time.time()
-        
-        sage_config = create_experiment_config(base_config, {
-            'checkpoint_dir': 'checkpoints/GraphSAGE',
-            'model_type': 'attention',  # 'standard', 'deep', 'attention', or 'multi'
-            'hidden_channels': 64,
-            'num_layers': 2,
-            'aggregator': 'mean',  # 'mean', 'max', 'min', 'lstm'
-            'dropout': 0.5,
-            'lr': 0.01,
-            'epochs': 200,
-            'patience': 20,
-        })
-        
-        model, test_metrics, tracker = train_graphsage(sage_config)
-        
-        training_time = time.time() - start_time
-        
-        results['GraphSAGE'] = {
-            'model': 'GraphSAGE',
-            'type': 'Homogeneous',
-            'metrics': test_metrics,
-            'training_time': training_time,
-            'history': tracker.get_history(),
-        }
-        
-        print(f"\n✓ GraphSAGE completed in {training_time/60:.2f} minutes")
-        print(f"  Test AUC-ROC: {test_metrics.get('auc_roc', 0):.4f}")
-        print(f"  Test F1: {test_metrics['f1']:.4f}")
-        
-    except Exception as e:
-        print(f"\n✗ GraphSAGE failed: {str(e)}")
-        results['GraphSAGE'] = {'error': str(e)}
-    
-    # ============================================================
-    # 5. RGCN (Relational GCN)
-    # ============================================================
-    print("\n" + "="*70)
-    print("MODEL 5/6: RGCN (Relational Graph Convolutional Network)")
-    print("="*70)
-    
-    try:
-        start_time = time.time()
-        
-        rgcn_config = create_experiment_config(base_config, {
-            'checkpoint_dir': 'checkpoints/RGCN',
-            'model_type': 'standard',  # 'standard', 'fast', or 'typed'
-            'hidden_channels': 64,
-            'num_layers': 2,
-            'num_bases': 30,
-            'dropout': 0.5,
-            'lr': 0.01,
-            'epochs': 200,
-            'patience': 30,
-        })
-        
-        model, test_metrics, tracker = train_rgcn(rgcn_config)
-        
-        training_time = time.time() - start_time
-        
-        results['RGCN'] = {
-            'model': 'RGCN',
-            'type': 'Heterogeneous',
-            'metrics': test_metrics,
-            'training_time': training_time,
-            'history': tracker.get_history(),
-        }
-        
-        print(f"\n✓ RGCN completed in {training_time/60:.2f} minutes")
-        print(f"  Test AUC-ROC: {test_metrics.get('auc_roc', 0):.4f}")
-        print(f"  Test F1: {test_metrics['f1']:.4f}")
-        
-    except Exception as e:
-        print(f"\n✗ RGCN failed: {str(e)}")
-        results['RGCN'] = {'error': str(e)}
-    
-    # ============================================================
-    # 6. HAN (Heterogeneous Attention Network)
-    # ============================================================
-    print("\n" + "="*70)
-    print("MODEL 6/6: HAN (Heterogeneous Attention Network)")
-    print("="*70)
-    
-    try:
-        start_time = time.time()
-        
-        han_config = create_experiment_config(base_config, {
-            'checkpoint_dir': 'checkpoints/HAN',
-            'model_type': 'simple',  # 'simple', 'han', or 'custom'
-            'hidden_channels': 64,
-            'num_heads': 8,
-            'dropout': 0.6,
-            'lr': 0.005,
-            'epochs': 300,
-            'patience': 40,
-        })
-        
-        model, test_metrics, tracker = train_han(han_config)
-        
-        training_time = time.time() - start_time
-        
-        results['HAN'] = {
-            'model': 'HAN',
-            'type': 'Heterogeneous',
-            'metrics': test_metrics,
-            'training_time': training_time,
-            'history': tracker.get_history(),
-        }
-        
-        print(f"\n✓ HAN completed in {training_time/60:.2f} minutes")
-        print(f"  Test AUC-ROC: {test_metrics.get('auc_roc', 0):.4f}")
-        print(f"  Test F1: {test_metrics['f1']:.4f}")
-        
-    except Exception as e:
-        print(f"\n✗ HAN failed: {str(e)}")
-        results['HAN'] = {'error': str(e)}
-    
-    return results
+# Note: run_all_models is now imported from runner.py
+# All model training logic has been moved to runner.py and models_config.py
 
 
 def create_comparison_table(results):
@@ -351,8 +68,9 @@ def create_comparison_table(results):
     
     df = pd.DataFrame(data)
     
-    # Sort by AUC-ROC descending
-    df = df.sort_values('AUC-ROC', ascending=False)
+    # Sort by AUC-ROC descending (if dataframe not empty)
+    if len(df) > 0 and 'AUC-ROC' in df.columns:
+        df = df.sort_values('AUC-ROC', ascending=False)
     
     return df
 
@@ -601,32 +319,43 @@ def print_final_summary(results, df):
     print(f"\nModels trained successfully: {len(valid_results)}/6")
     
     if len(valid_results) == 0:
-        print("No models completed successfully")
+        print("\n⚠️  No models completed successfully!")
+        print("\nPossible reasons:")
+        print("  1. Dataset not found - Did you download the IEEE-CIS dataset?")
+        print("  2. Missing dependencies - Check requirements.txt")
+        print("  3. CUDA/GPU issues - Try running on CPU")
+        print("\nTo download dataset:")
+        print("  kaggle competitions download -c ieee-fraud-detection")
+        print("  unzip ieee-fraud-detection.zip -d dataset/ieee-fraud-detection/")
         return
     
     # Failed models
     failed = [k for k, v in results.items() if 'error' in v]
     if failed:
         print(f"Failed models: {', '.join(failed)}")
+        print("\nErrors:")
+        for model_name in failed:
+            print(f"  - {model_name}: {results[model_name]['error']}")
     
     print("\n" + "-"*70)
     print("COMPARISON TABLE")
     print("-"*70)
     print(df.to_string(index=False))
     
-    # Best model
-    print("\n" + "-"*70)
-    print("BEST MODEL")
-    print("-"*70)
-    
-    best_model = df.iloc[0]
-    print(f"Model: {best_model['Model']}")
-    print(f"Type: {best_model['Type']}")
-    print(f"AUC-ROC: {best_model['AUC-ROC']:.4f}")
-    print(f"F1-Score: {best_model['F1-Score']:.4f}")
-    print(f"Precision: {best_model['Precision']:.4f}")
-    print(f"Recall: {best_model['Recall']:.4f}")
-    print(f"Training Time: {best_model['Training Time (min)']:.2f} minutes")
+    # Best model (only if df not empty)
+    if len(df) > 0:
+        print("\n" + "-"*70)
+        print("BEST MODEL")
+        print("-"*70)
+        
+        best_model = df.iloc[0]
+        print(f"Model: {best_model['Model']}")
+        print(f"Type: {best_model['Type']}")
+        print(f"AUC-ROC: {best_model['AUC-ROC']:.4f}")
+        print(f"F1-Score: {best_model['F1-Score']:.4f}")
+        print(f"Precision: {best_model['Precision']:.4f}")
+        print(f"Recall: {best_model['Recall']:.4f}")
+        print(f"Training Time: {best_model['Training Time (min)']:.2f} minutes")
     
     # Comparison insights
     print("\n" + "-"*70)
@@ -652,41 +381,44 @@ def print_final_summary(results, df):
             diff = ((avg_homo_auc - avg_hetero_auc) / avg_hetero_auc) * 100
             print(f"   → Homogeneous models perform {diff:.1f}% better!")
     
-    # Training time
-    fastest = df.iloc[-1]
-    slowest = df.iloc[0]
-    print(f"\n2. Training Efficiency:")
-    print(f"   - Fastest: {fastest['Model']} ({fastest['Training Time (min)']:.2f} min)")
-    print(f"   - Slowest: {slowest['Model']} ({slowest['Training Time (min)']:.2f} min)")
+    # Training time (only if df not empty)
+    if len(df) > 0:
+        fastest = df.iloc[-1]
+        slowest = df.iloc[0]
+        print(f"\n2. Training Efficiency:")
+        print(f"   - Fastest: {fastest['Model']} ({fastest['Training Time (min)']:.2f} min)")
+        print(f"   - Slowest: {slowest['Model']} ({slowest['Training Time (min)']:.2f} min)")
     
-    # Performance range
-    print(f"\n3. Performance Range:")
-    print(f"   - AUC-ROC: {df['AUC-ROC'].min():.4f} - {df['AUC-ROC'].max():.4f}")
-    print(f"   - F1-Score: {df['F1-Score'].min():.4f} - {df['F1-Score'].max():.4f}")
-    print(f"   - Spread: {(df['AUC-ROC'].max() - df['AUC-ROC'].min()):.4f}")
+    # Performance range (only if df not empty)
+    if len(df) > 0:
+        print(f"\n3. Performance Range:")
+        print(f"   - AUC-ROC: {df['AUC-ROC'].min():.4f} - {df['AUC-ROC'].max():.4f}")
+        print(f"   - F1-Score: {df['F1-Score'].min():.4f} - {df['F1-Score'].max():.4f}")
+        print(f"   - Spread: {(df['AUC-ROC'].max() - df['AUC-ROC'].min()):.4f}")
     
-    # Recommendation
-    print("\n" + "-"*70)
-    print("RECOMMENDATION")
-    print("-"*70)
-    
-    best_auc = df.iloc[0]['AUC-ROC']
-    best_model_name = df.iloc[0]['Model']
-    
-    if best_auc >= 0.90:
-        print(f"✓ Excellent performance! {best_model_name} achieves AUC-ROC >= 0.90")
-    elif best_auc >= 0.85:
-        print(f"✓ Good performance! {best_model_name} achieves AUC-ROC >= 0.85")
-    else:
-        print(f"⚠ Moderate performance. Consider hyperparameter tuning or more data.")
-    
-    print(f"\nFor production fraud detection, we recommend:")
-    print(f"  → {best_model_name} (Best AUC-ROC: {best_auc:.4f})")
-    
-    # Second best
-    if len(df) > 1:
-        second_best = df.iloc[1]
-        print(f"  → Alternative: {second_best['Model']} (AUC-ROC: {second_best['AUC-ROC']:.4f})")
+    # Recommendation (only if df not empty)
+    if len(df) > 0:
+        print("\n" + "-"*70)
+        print("RECOMMENDATION")
+        print("-"*70)
+        
+        best_auc = df.iloc[0]['AUC-ROC']
+        best_model_name = df.iloc[0]['Model']
+        
+        if best_auc >= 0.90:
+            print(f"✓ Excellent performance! {best_model_name} achieves AUC-ROC >= 0.90")
+        elif best_auc >= 0.85:
+            print(f"✓ Good performance! {best_model_name} achieves AUC-ROC >= 0.85")
+        else:
+            print(f"⚠ Moderate performance. Consider hyperparameter tuning or more data.")
+        
+        print(f"\nFor production fraud detection, we recommend:")
+        print(f"  → {best_model_name} (Best AUC-ROC: {best_auc:.4f})")
+        
+        # Second best
+        if len(df) > 1:
+            second_best = df.iloc[1]
+            print(f"  → Alternative: {second_best['Model']} (AUC-ROC: {second_best['AUC-ROC']:.4f})")
     
     print("\n" + "="*70)
 
@@ -721,17 +453,47 @@ def main():
     print("\n" + "="*70)
     print("COMPREHENSIVE GNN RESEARCH FOR FRAUD DETECTION")
     print("="*70)
-    print("\nThis script will train and compare 6 different GNN models:")
-    print("  1. GNN - Basic Graph Neural Network")
-    print("  2. GCN - Graph Convolutional Network")
-    print("  3. GAT - Graph Attention Network")
-    print("  4. GraphSAGE - Sampling-based Inductive Learning")
-    print("  5. RGCN - Relational Graph Convolutional Network")
-    print("  6. HAN - Heterogeneous Attention Network")
+    print("\nAvailable models:")
+    for idx, (name, info) in enumerate(MODEL_CONFIGS.items(), 1):
+        print(f"  {idx}. {name} - {info['description']} ({info['type']})")
+    
     print("\nConfiguration:")
     print(f"  - Max samples: {base_config['max_samples'] or 'All'}")
     print(f"  - Device: {'CUDA' if torch.cuda.is_available() else 'CPU'}")
     print(f"  - Seed: {base_config['seed']}")
+    
+    # User options
+    print("\n" + "="*70)
+    print("OPTIONS:")
+    print("  [1] Train all models (default)")
+    print("  [2] Train only homogeneous models (GNN, GCN, GAT, GraphSAGE)")
+    print("  [3] Train only heterogeneous models (RGCN, HAN)")
+    print("  [4] Select specific models")
+    print("="*70)
+    
+    choice = input("\nSelect option (1-4) [default: 1]: ").strip() or "1"
+    
+    # Determine which models to run
+    if choice == "1":
+        print("\n✓ Training all models...")
+        run_func = run_all_models
+    elif choice == "2":
+        print("\n✓ Training homogeneous models only...")
+        run_func = run_homogeneous_models
+    elif choice == "3":
+        print("\n✓ Training heterogeneous models only...")
+        run_func = run_heterogeneous_models
+    elif choice == "4":
+        print("\nAvailable models:", ', '.join(MODEL_CONFIGS.keys()))
+        selected = input("Enter model names (comma-separated): ").strip()
+        selected_models = [m.strip() for m in selected.split(',')]
+        print(f"\n✓ Training selected models: {', '.join(selected_models)}")
+        
+        def run_func(config):
+            return run_selected_models(config, selected_models)
+    else:
+        print(f"Invalid choice: {choice}. Using default (all models).")
+        run_func = run_all_models
     
     # Confirm
     print("\n" + "="*70)
@@ -740,9 +502,9 @@ def main():
         print("Cancelled.")
         return
     
-    # Run all models
+    # Run models
     start_time = time.time()
-    results = run_all_models(base_config)
+    results = run_func(base_config)
     total_time = time.time() - start_time
     
     # Create comparison table

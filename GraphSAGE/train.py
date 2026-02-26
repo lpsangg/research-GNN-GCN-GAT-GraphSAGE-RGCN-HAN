@@ -14,7 +14,7 @@ sys.path.append(str(Path(__file__).parent.parent))
 from GraphSAGE.model import create_graphsage_model
 from utils import (
     load_ieee_fraud_data,
-    preprocess_features,
+    PreprocessingPipeline,
     prepare_homogeneous_data,
     create_train_val_test_split,
     compute_metrics,
@@ -131,12 +131,18 @@ def train_graphsage(config):
     print("="*50)
     
     train_trans, train_ident, _, _ = load_ieee_fraud_data(config['data_dir'])
-    df, feature_cols = preprocess_features(train_trans, train_ident)
     
     # Giới hạn số samples nếu cần (cho testing nhanh)
     if config.get('max_samples'):
-        df = df.sample(n=min(config['max_samples'], len(df)), random_state=42)
-        print(f"Using {len(df)} samples for quick testing")
+        train_trans = train_trans.head(config['max_samples'])
+        train_ident = train_ident[train_ident['TransactionID'].isin(train_trans['TransactionID'])]
+        print(f"Using {len(train_trans)} samples for quick testing")
+    
+    # Use new preprocessing pipeline (fixes data leakage)
+    print("\nPreprocessing with PreprocessingPipeline...")
+    pipeline = PreprocessingPipeline()
+    df, feature_cols = pipeline.fit_transform(train_trans, train_ident)
+    print(f"✓ Preprocessed: {df.shape[0]} transactions, {len(feature_cols)} features")
     
     # Create graph
     print("\nCreating homogeneous graph...")

@@ -103,12 +103,11 @@ def prepare_homogeneous_data(df, feature_cols, edge_strategy='user_device_time')
     Returns:
         data: PyG Data object
     """
-    # 1. Node Features
+    # 1. Node Features (already scaled by PreprocessingPipeline)
     x = torch.tensor(df[feature_cols].fillna(0).values, dtype=torch.float)
     
-    # Chuẩn hóa features
-    scaler = StandardScaler()
-    x = torch.tensor(scaler.fit_transform(x.numpy()), dtype=torch.float)
+    # Note: Scaling is done in PreprocessingPipeline to avoid data leakage
+    # Do NOT scale again here
     
     # Labels
     y = torch.tensor(df['isFraud'].values, dtype=torch.long)
