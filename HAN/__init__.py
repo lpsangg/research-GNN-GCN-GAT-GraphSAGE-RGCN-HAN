@@ -1,6 +1,6 @@
-﻿\"\"\"
+﻿"""
 HAN (Heterogeneous Attention Network) Module for Fraud Detection
-\"\"\"
+"""
 
 try:
     from .model import (

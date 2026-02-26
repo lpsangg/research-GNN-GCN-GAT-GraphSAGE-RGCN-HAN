@@ -1,6 +1,6 @@
-﻿\"\"\"
+﻿"""
 RGCN Module for Fraud Detection
-\"\"\"
+"""
 
 try:
     from .model import (

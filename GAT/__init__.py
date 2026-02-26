@@ -1,6 +1,6 @@
-﻿\"\"\"
+﻿"""
 GAT Module for Fraud Detection
-\"\"\"
+"""
 
 try:
     from .model import GAT, GATv2, MultiHeadGAT, create_gat_model

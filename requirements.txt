@@ -1,57 +1,41 @@
 # ============================================================
-# GNN FRAUD DETECTION - REQUIREMENTS
+# GNN FRAUD DETECTION - CLEAN RESEARCH SETUP
+# Compatible with CUDA 12.1
 # ============================================================
 
-# Core Deep Learning Frameworks
-torch>=2.0.0
-torchvision>=0.15.0
-torchaudio>=2.0.0
+# Core Deep Learning (Stable combo)
+torch==2.2.2
+torchvision==0.17.2
+torchaudio==2.2.2
 
-# PyTorch Geometric and Dependencies
-torch-geometric>=2.3.0
-torch-scatter>=2.1.0
-torch-sparse>=0.6.16
-torch-cluster>=1.6.0
-torch-spline-conv>=1.2.1
-pyg-lib>=0.2.0
+# Graph Neural Networks
+torch-geometric==2.5.3
 
 # Data Processing
-pandas>=1.3.0
-numpy>=1.21.0
+pandas>=1.5.0
+numpy>=1.23.0
 
 # Machine Learning
-scikit-learn>=1.0.0
-scipy>=1.7.0
-imbalanced-learn>=0.9.0
+scikit-learn>=1.2.0
+scipy>=1.9.0
+imbalanced-learn>=0.11.0
 
 # Visualization
-matplotlib>=3.4.0
-seaborn>=0.11.0
-plotly>=5.0.0
+matplotlib>=3.7.0
+seaborn>=0.12.0
+plotly>=5.15.0
 
-# Dataset Management
-kaggle>=1.5.12
+# Dataset / Utilities
+kaggle>=1.6.0
+tqdm>=4.65.0
 
-# Utilities
-tqdm>=4.62.0
-jupyterlab>=3.0.0
-notebook>=6.4.0
+# Notebook
+jupyterlab>=4.0.0
 
-# Testing and Quality
-pytest>=7.0.0
-pytest-cov>=3.0.0
-black>=22.0.0
-flake8>=4.0.0
+# Model Interpretability
+shap>=0.44.0
+captum>=0.7.0
 
-# Optional: Model Interpretability
-shap>=0.40.0
-captum>=0.5.0
-
-# Optional: Experiment Tracking
-tensorboard>=2.10.0
-wandb>=0.13.0
-
-# Optional: Hyperparameter Optimization
-optuna>=3.0.0
-ray[tune]>=2.0.0
-
+# Experiment Tracking (optional)
+tensorboard>=2.15.0
+optuna>=3.5.0

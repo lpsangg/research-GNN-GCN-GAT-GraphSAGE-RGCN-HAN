@@ -1,6 +1,6 @@
-﻿\"\"\"
+﻿"""
 GCN Module for Fraud Detection
-\"\"\"
+"""
 
 try:
     from .model import GCN, DeepGCN, JKNetGCN, create_gcn_model
